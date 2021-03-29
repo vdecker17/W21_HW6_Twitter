@@ -1,6 +1,6 @@
 #########################################
-##### Name:                         #####
-##### Uniqname:                     #####
+##### Name: Vanessa Decker          #####
+##### Uniqname: vdecker             #####
 #########################################
 
 from requests_oauthlib import OAuth1
@@ -97,7 +97,10 @@ def construct_unique_key(baseurl, params):
         the unique key as a string
     '''
     #TODO Implement function
-    pass
+    unique_key = baseurl
+    for key,val in params.items():
+        unique_key += f"_{key}_{val}"
+    return unique_key
 
 
 def make_request(baseurl, params):
@@ -117,7 +120,9 @@ def make_request(baseurl, params):
         a dictionary
     '''
     #TODO Implement function
-    pass
+    response = requests.get(baseurl, params, auth=oauth)
+    response_dict = response.json()
+    return response_dict
 
 
 def make_request_with_cache(baseurl, hashtag, count):
@@ -149,7 +154,18 @@ def make_request_with_cache(baseurl, hashtag, count):
         JSON
     '''
     #TODO Implement function
-    pass
+    params= {'q':f'%23{hashtag}','count':count}
+    unique_key = construct_unique_key(baseurl, params)
+    try:
+        CACHE_DICT = open_cache()
+        print("fetching cache data")
+        return CACHE_DICT[unique_key]
+    except:
+        print("making new request")
+        request = make_request(baseurl,params)
+        CACHE_DICT[unique_key] = request
+        save_cache(CACHE_DICT)
+        return CACHE_DICT[unique_key]
 
 
 def find_most_common_cooccurring_hashtag(tweet_data, hashtag_to_ignore):
@@ -172,7 +188,25 @@ def find_most_common_cooccurring_hashtag(tweet_data, hashtag_to_ignore):
 
     '''
     # TODO: Implement function 
-    pass
+    hash_dict = {}
+    hash_text = []
+    for item in tweet_data['statuses']:
+        for hash_item in item['entities']['hashtags']:
+            if hash_item['text'].lower() != hashtag_to_ignore.lower():
+                hash_text.append(hash_item['text'].lower())
+    for item in hash_text:
+        if item in hash_dict.keys():
+            hash_dict[item] += 1
+        else:
+            hash_dict[item] = 1
+    print(hash_dict)
+    second_max = None
+    second_max_count = 0
+    for key,val in hash_dict.items():
+        if val > second_max_count:
+            second_max = key
+            second_max_count = val
+    return second_max.title()
     ''' Hint: In case you're confused about the hashtag_to_ignore 
     parameter, we want to ignore the hashtag we queried because it would 
     definitely be the most occurring hashtag, and we're trying to find 
@@ -193,7 +227,7 @@ if __name__ == "__main__":
     CACHE_DICT = open_cache()
 
     baseurl = "https://api.twitter.com/1.1/search/tweets.json"
-    hashtag = "#MarchMadness2021"
+    hashtag = "MarchMadness2021"
     count = 100
 
     tweet_data = make_request_with_cache(baseurl, hashtag, count)
