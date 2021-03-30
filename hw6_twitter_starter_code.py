@@ -100,6 +100,7 @@ def construct_unique_key(baseurl, params):
     #TODO Implement function
     param_strings = []
     connector = '_'
+    params = {k:v for k,v in sorted(params.items())}
     for k in params.keys():
         param_strings.append(f'{k}_{params[k]}')
     unique_key = baseurl + connector + connector.join(param_strings)
@@ -196,13 +197,13 @@ def find_most_common_cooccurring_hashtag(tweet_data, hashtag_to_ignore):
     hash_text = []
     for item in tweet_data['statuses']:
         for hash_item in item['entities']['hashtags']:
-            if hash_item['text'].lower() != hashtag_to_ignore.lower():
-                hash_text.append(hash_item['text'].lower())
+            hash_text.append(hash_item['text'].lower().replace('#',''))
     for item in hash_text:
-        if item in hash_dict.keys():
-            hash_dict[item] += 1
-        else:
-            hash_dict[item] = 1
+        if item != hashtag_to_ignore.lower().replace('#',''):
+            if item in hash_dict.keys():
+                hash_dict[item] += 1
+            else:
+                hash_dict[item] = 1
     second_max = None
     second_max_count = 0
     for key,val in hash_dict.items():
