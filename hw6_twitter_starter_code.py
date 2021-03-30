@@ -9,8 +9,9 @@ import requests
 
 import hw6_secrets_starter as secrets # file that contains your OAuth credentials
 
+
 CACHE_FILENAME = "twitter_cache.json"
-CACHE_DICT = {}
+CACHE_DICTION = {}
 
 client_key = secrets.TWITTER_API_KEY
 client_secret = secrets.TWITTER_API_SECRET
@@ -97,9 +98,11 @@ def construct_unique_key(baseurl, params):
         the unique key as a string
     '''
     #TODO Implement function
-    unique_key = baseurl
-    for key,val in params.items():
-        unique_key += f"_{key}_{val}"
+    param_strings = []
+    connector = '_'
+    for k in params.keys():
+        param_strings.append(f'{k}_{params[k]}')
+    unique_key = baseurl + connector + connector.join(param_strings)
     return unique_key
 
 
@@ -154,18 +157,19 @@ def make_request_with_cache(baseurl, hashtag, count):
         JSON
     '''
     #TODO Implement function
-    params= {'q':f'%23{hashtag}','count':count}
+    params= {'count':count, 'q':hashtag}
     unique_key = construct_unique_key(baseurl, params)
     try:
-        CACHE_DICT = open_cache()
-        print("fetching cache data")
-        return CACHE_DICT[unique_key]
+        CACHE_DICTION = open_cache()
+        output = CACHE_DICTION[unique_key]
+        print("fetching cached data")
+        return output
     except:
-        print("making new request")
         request = make_request(baseurl,params)
-        CACHE_DICT[unique_key] = request
-        save_cache(CACHE_DICT)
-        return CACHE_DICT[unique_key]
+        print("making new request")
+        CACHE_DICTION[unique_key] = request
+        save_cache(CACHE_DICTION)
+        return CACHE_DICTION[unique_key]
 
 
 def find_most_common_cooccurring_hashtag(tweet_data, hashtag_to_ignore):
@@ -199,14 +203,13 @@ def find_most_common_cooccurring_hashtag(tweet_data, hashtag_to_ignore):
             hash_dict[item] += 1
         else:
             hash_dict[item] = 1
-    print(hash_dict)
     second_max = None
     second_max_count = 0
     for key,val in hash_dict.items():
         if val > second_max_count:
             second_max = key
             second_max_count = val
-    return second_max.title()
+    return second_max
     ''' Hint: In case you're confused about the hashtag_to_ignore 
     parameter, we want to ignore the hashtag we queried because it would 
     definitely be the most occurring hashtag, and we're trying to find 
